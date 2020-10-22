@@ -1,0 +1,34 @@
+from cv2 import *
+from numpy import *
+
+cap=VideoCapture("vtest.avi")
+
+ret,frame1=cap.read()
+ret, frame2=cap.read()
+
+while(cap.isOpened()):
+    diff=absdiff(frame1,frame2)
+    gray=cvtColor(diff,COLOR_BGR2GRAY)
+    blur = GaussianBlur(gray, (5, 5), 0)
+    _, thresh = threshold(blur, 20, 255, THRESH_BINARY)
+
+    dilated = dilate(thresh, None, iterations=3)
+
+    contours, _ = findContours(dilated, RETR_TREE, CHAIN_APPROX_NONE)
+    #drawContours(frame1, contour, -1, (255, 0, 0), 2)
+    for contour in contours:
+        (x,y,w,h)=boundingRect(contour)
+        if contourArea(contour) < 2000:
+           continue
+
+        rectangle(frame1, (x, y), (x + w, y + h), (255, 0, 0), 2)
+        putText(frame1, "Status: Movement", (10, 20), FONT_ITALIC, 1, (0, 255, 0), 3)
+
+    imshow("cont", frame1)
+    frame1 = frame2
+    ret, frame2 = cap.read()
+    k = waitKey(40)
+    if k==27:
+        break
+cap.release()
+destroyAllWindows()
